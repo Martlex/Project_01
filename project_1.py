@@ -8,6 +8,14 @@ email: urbis.martin@gmail.com
 discord: segen0
 """
 
+""" change log
+* 12-10-2024 *
+1) bug fix - evaluation individual words (discarding punctuation marks)
+2) adjustment of bar graph after fix issue in 1)
+3) processing more than 3 text slots in the stack
+4) formating of end of program message
+"""
+
 # variable declaration
 # credentials definition (user, pasword)
 credentials: dict = {
@@ -26,6 +34,8 @@ longest: int  # longest word (number of char) in the selected TEXT
 option_processing: int  # option selected by user for TEXTS processing
 words_len: list = []  # list with lenghts of individual words in selected TEXTS
 ident_word: int  # leng of word for indentation
+number_text_slots: int = 0  # number texts slots in the stack for option
+option_driver: bool = True  # loop driver for option of user's input
 
 TEXTS = [
     """Situated about 10 miles west of Kemmerer,
@@ -54,6 +64,9 @@ other freshwater genera and herring similar to those
 in modern oceans. Other fish such as paddlefish,
 garpike and stingray are also present.""",
 ]
+
+# get number of text slots from the stack
+number_text_slots = len(TEXTS)
 
 
 def credentials_evaluation(username: str, password: str) -> bool:
@@ -85,7 +98,8 @@ def text_analysis(sentence_container: str) -> tuple:
         if word.istitle():
             number_titlecase_words = number_titlecase_words + 1
         if word.isupper():
-            number_uppercase_words = number_uppercase_words + 1
+            if word.isalpha():
+                number_uppercase_words = number_uppercase_words + 1
         if word.islower():
             number_lowercase_words = number_lowercase_words + 1
         if word.isnumeric():
@@ -113,9 +127,48 @@ def get_word_longest_lengths(words: str) -> int:
 def get_offset_right_side(ident_word: int) -> str:
     """get offset of the right side of the graphic output according to the word length -
     the function returns number of spaces from left side of chart"""
-    DEFAULT: int = 16  # constant for offset calculation
+    DEFAULT: int = 17  # constant for offset calculation
 
     return " " * (DEFAULT - ident_word)
+
+
+def remove_end_punctuation(item: str) -> str:
+    # 07-10-2024, doplneno k odstraneni chyb v grafu
+    """remove the punctuation at the end of the word"""
+
+    punctuation: tuple = (",", ".", ":", "?", "!", ";")  # punctation marks for
+    # comparison
+
+    punctation_mark: str  # isolated punctation mark from the word
+    new_word: (
+        str  # the original word modified in case of punctation at the end
+    )
+
+    # get last char from the word
+    punctation_mark = item[-1]
+
+    if punctuation.count(punctation_mark) == 0:
+        # there is no punctuation mark in the word
+        new_word = item
+    else:
+        # remove punctuation
+        new_word = item[0 : len(item) - 1]
+
+    return new_word
+
+
+def input_validation(input: str, number_text_slots: int) -> bool:
+    """user's input validation - the input may only be to the extent
+    specified in the instructions for selecting the text number to be analyzed
+    """
+
+    if input.isalpha():
+        return False
+    else:
+        if int(input) >= 1 and int(input) <= number_text_slots:
+            return True
+        else:
+            return False
 
 
 # *** main program  ***
@@ -138,23 +191,19 @@ print("We have 3 texts to be analyzed.")
 print("----------------------------------------")
 
 # option for TEXTS processing
-while True:
-    analyse_option = input("Enter a number btw. 1 and 3 to select: ")
+while option_driver:
+    # analyse_option = input("Enter a number btw. 1 and 3 to select: ")
+    analyse_option = input(
+        f"Enter a number btw. 1 and {number_text_slots} to select: "
+    )
 
-    # text 1 processing
-    if (analyse_option) == "1":
-        option_processing = 0
-        break
-    # text 2 processing
-    elif (analyse_option) == "2":
-        option_processing = 1
-        break
-    # text 3 processing
-    elif (analyse_option) == "3":
-        option_processing = 2
-        break
-
-    # processing of inadmissible input
+    # check user's input 10-10-2024
+    if input_validation(analyse_option, number_text_slots) is True:
+        for i in range(1, number_text_slots + 1):
+            if int(analyse_option) == i:
+                option_processing = i - 1
+                option_driver = False
+    #  processing of inadmissible input
     else:
         if analyse_option != "end":
             print(
@@ -178,7 +227,7 @@ print(f"There are {output_formating[3]} lowercase words.")
 print(f"There are {output_formating[4]} numeric strings.")
 print(f"The sum of all the numbers {output_formating[5]} ")
 print("----------------------------------------")
-print("LEN|  OCCURENCES       |NR.")
+print("LEN|  OCCURENCES        |NR.")
 print("----------------------------------------")
 
 
@@ -188,7 +237,7 @@ longest = get_word_longest_lengths(TEXTS[option_processing].split())
 
 # read data to list
 for word in TEXTS[option_processing].split():
-    words_len.append(len(word))
+    words_len.append(len(remove_end_punctuation(word)))
 
 # final processing & print output
 # go thru individual words in the list and return details for bar chart
@@ -219,6 +268,7 @@ for i in range(longest):
                 "|",
                 words_len.count(i + 1),
             )
-print(
-    "\n* * * Zero length words are suppressed in the bar chart - End of Processing * * *\n"
-)
+
+print("\n* Info: zero length words are suppressed in the bar chart.\n")
+
+print("* * * End of Processing * * *\n")
