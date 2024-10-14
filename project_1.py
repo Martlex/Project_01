@@ -14,6 +14,10 @@ discord: segen0
 2) adjustment of bar graph after fix issue in 1)
 3) processing more than 3 text slots in the stack
 4) formating of end of program message
+
+* 14-10-2024 *
+1) update of text info about number of text slots 
+in the stack - variable is used there instead of string literal
 """
 
 # variable declaration
@@ -187,7 +191,7 @@ if credentials_evaluation(login_username, login_password) is not True:
 
 print("----------------------------------------")
 print(f"Welcome to the app, {login_username}")
-print("We have 3 texts to be analyzed.")
+print(f"We have {number_text_slots} texts to be analyzed.")
 print("----------------------------------------")
 
 # option for TEXTS processing
